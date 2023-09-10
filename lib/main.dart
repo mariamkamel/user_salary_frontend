@@ -25,6 +25,7 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   List<Map<String, dynamic>> dataRows = [];
+  String errorMessage = ''; // Error message to display
 
   @override
   Widget build(BuildContext context) {
@@ -70,18 +71,25 @@ class _MainPageState extends State<MainPage> {
                       // Update the UI to display the DataTable
                     });
                     final response = await http.post(
-                      Uri.parse(
-                          'http://localhost:8000/bulk-upload/'), // Replace with your API URL
+                      Uri.parse('http://localhost:8000/bulk-upload/'),
                       headers: <String, String>{
                         'Content-Type': 'application/json',
                       },
                       body: jsonEncode(dataRows), // Convert dataRows to JSON
                     );
-                    print(jsonEncode(dataRows));
 
                     if (response.statusCode == 201) {
                       // Successful upload, you can handle the response as needed
                       print('Bulk upload successful!');
+                      setState(() {
+                        errorMessage = ''; // Clear error message
+                      });
+                    } else if (response.statusCode == 400) {
+                      // Invalid data format, display an error message
+                      setState(() {
+                        errorMessage =
+                            'Invalid data format please add data in form of: Name: String, Salary: Float, Percentage: Float';
+                      });
                     } else {
                       // Handle errors if necessary
                       print(
@@ -92,6 +100,16 @@ class _MainPageState extends State<MainPage> {
               },
               child: Text('Upload your Excel File'),
             ),
+            // Display an error message if there is one
+            if (errorMessage.isNotEmpty)
+              Text(
+                errorMessage,
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
             // Display the DataTable here
             if (dataRows.isNotEmpty)
               DataTable(
